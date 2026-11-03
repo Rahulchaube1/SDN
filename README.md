@@ -6,6 +6,8 @@
 [![OpenFlow 1.3](https://img.shields.io/badge/Southbound_Protocol-OpenFlow_1.3-1D4ED8?style=for-the-badge)](https://sdn-network-guardian.vercel.app)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![React 18 + Vite](https://img.shields.io/badge/Frontend-React_18_%2B_Tailwind-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://sdn-network-guardian.vercel.app)
+[![Open Source](https://img.shields.io/badge/Open_Source-MIT_License-15803D?style=for-the-badge)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen?style=for-the-badge)](CONTRIBUTING.md)
 
 > **🌐 Live Production Deployment (Full-Stack NOC Console):** [https://sdn-network-guardian.vercel.app](https://sdn-network-guardian.vercel.app)  
 > **📘 Interactive OpenAPI / Swagger Documentation:** [https://sdn-network-guardian.vercel.app/docs](https://sdn-network-guardian.vercel.app/docs)  
@@ -643,6 +645,17 @@ python -m unittest discover -s tests -v
 | `test_controller_mitigation.py` | `test_mitigation_rule_generation_manual_unblock_and_expiration` | `OFPFlowMod` `DROP` creation, manual unblock & TTL expiry | ✅ **PASSED** |
 | `test_api_database.py` | `test_database_alert_and_mitigation_persistence` | SQLite3 CRUD persistence for alerts & mitigation events | ✅ **PASSED** |
 | `test_api_database.py` | `test_fastapi_endpoints_and_scenario_workflow` | FastAPI `/health`, `/scenarios/trigger`, and `/settings` hot-reload | ✅ **PASSED** |
+
+---
+
+## 🤝 14. Open-Source Contributions & Community Guide
+
+This repository is **100% Open Source** and open to contributors worldwide! Anyone can fork the project, add new ML models, OpenFlow 1.3 mitigation rules, Mininet topologies, or NOC dashboard widgets, and submit a Pull Request.
+
+1. **Fork** the repository: [https://github.com/Rahulchaube1/SDN/fork](https://github.com/Rahulchaube1/SDN/fork)
+2. **Create a feature branch:** `git checkout -b feat/your-new-feature`
+3. **Run the automated test suite:** `python -m unittest discover -s tests -v`
+4. **Submit a Pull Request:** See [`CONTRIBUTING.md`](CONTRIBUTING.md), [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md), and [`SECURITY.md`](SECURITY.md) for full guidelines.
 
 ---
 
