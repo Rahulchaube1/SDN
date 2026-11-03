@@ -1,0 +1,12 @@
+.vercel
+.venv
+venv
+__pycache__/
+*.py[cod]
+*$py.class
+*.db
+*.db-journal
+.env
+frontend/node_modules/
+.DS_Store
+Thumbs.db

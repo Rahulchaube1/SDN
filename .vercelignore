@@ -1,0 +1,13 @@
+.venv
+venv
+__pycache__
+*.pyc
+*.db
+*.db-journal
+frontend/node_modules
+presentation
+research_paper
+images
+experiments/results/*.png
+experiments/results/*.svg
+detection/saved_models/*.csv

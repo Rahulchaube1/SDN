@@ -1,0 +1,65 @@
+{
+  "dataset_type": "SYNTHETIC_OPENFLOW_FLOW_DATASET",
+  "total_samples": 4000,
+  "train_samples": 3000,
+  "test_samples": 1000,
+  "feature_importances": {
+    "packet_count": 0.1124,
+    "byte_count": 0.0705,
+    "flow_duration_sec": 0.1292,
+    "packets_per_sec": 0.1831,
+    "bytes_per_sec": 0.1252,
+    "source_flow_count": 0.2182,
+    "traffic_variation_cv": 0.1613
+  },
+  "models": {
+    "Rule-Based Threshold": {
+      "tp": 290,
+      "tn": 638,
+      "fp": 45,
+      "fn": 27,
+      "accuracy": 0.928,
+      "precision": 0.8657,
+      "recall": 0.9148,
+      "f1_score": 0.8896,
+      "false_positive_rate": 0.0659,
+      "inference_latency_ms": 0.0792
+    },
+    "Isolation Forest (Unsupervised)": {
+      "tp": 298,
+      "tn": 645,
+      "fp": 38,
+      "fn": 19,
+      "accuracy": 0.943,
+      "precision": 0.8869,
+      "recall": 0.9401,
+      "f1_score": 0.9127,
+      "false_positive_rate": 0.0556,
+      "inference_latency_ms": 0.2111
+    },
+    "Random Forest (Supervised)": {
+      "tp": 308,
+      "tn": 677,
+      "fp": 6,
+      "fn": 9,
+      "accuracy": 0.985,
+      "precision": 0.9809,
+      "recall": 0.9716,
+      "f1_score": 0.9762,
+      "false_positive_rate": 0.0088,
+      "inference_latency_ms": 0.0609
+    },
+    "Hybrid Guardian (Rule + RF)": {
+      "tp": 310,
+      "tn": 666,
+      "fp": 17,
+      "fn": 7,
+      "accuracy": 0.976,
+      "precision": 0.948,
+      "recall": 0.9779,
+      "f1_score": 0.9627,
+      "false_positive_rate": 0.0249,
+      "inference_latency_ms": 0.1401
+    }
+  }
+}

@@ -1,0 +1,50 @@
+version: "3.9"
+
+services:
+  guardian-backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: sdn-guardian-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - GUARDIAN_ENV=development
+      - DATABASE_PATH=/app/backend/database/guardian_sdn.db
+      - DETECTION_MODE=hybrid
+      - ML_MODEL_TYPE=random_forest
+      - AUTO_MITIGATION_ENABLED=true
+    volumes:
+      - ./backend:/app/backend
+      - ./detection:/app/detection
+      - ./controller:/app/controller
+    restart: unless-stopped
+
+  guardian-controller:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: sdn-guardian-controller
+    command: python3 -m controller.sdn_controller --standalone-sim
+    ports:
+      - "6653:6653"
+    environment:
+      - BACKEND_API_URL=http://guardian-backend:8000
+      - CONTROLLER_POLL_INTERVAL_SEC=2.0
+    depends_on:
+      - guardian-backend
+    restart: unless-stopped
+
+  guardian-frontend:
+    image: node:20-alpine
+    container_name: sdn-guardian-frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+    depends_on:
+      - guardian-backend

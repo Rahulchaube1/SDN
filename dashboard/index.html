@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI-Powered SDN Network Guardian — Enterprise NOC Dashboard</title>
+<style>
+  :root {
+    --bg-app: #F8FAFC;
+    --bg-card: #FFFFFF;
+    --border: #E2E8F0;
+    --border-strong: #CBD5E1;
+    --text-main: #0F172A;
+    --text-muted: #475569;
+    --text-subtle: #64748B;
+    --blue: #1D4ED8;
+    --blue-light: #EFF6FF;
+    --blue-border: #BFDBFE;
+    --green: #15803D;
+    --green-light: #F0FDF4;
+    --red: #B91C1C;
+    --red-light: #FEF2F2;
+    --amber: #B45309;
+    --amber-light: #FFFBEB;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg-app);
+    color: var(--text-main);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+  /* Left Navigation Sidebar */
+  aside {
+    width: 268px;
+    background: var(--bg-card);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .brand-header {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .brand-kicker {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--blue);
+    text-transform: uppercase;
+  }
+  .brand-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-top: 3px;
+  }
+  .brand-sub {
+    font-size: 11.5px;
+    color: var(--text-subtle);
+    margin-top: 2px;
+  }
+  .nav-list {
+    padding: 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .nav-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+  }
+  .nav-btn.active {
+    background: var(--blue-light);
+    color: var(--blue);
+    border-color: var(--blue-border);
+  }
+  .nav-tag {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #F1F5F9;
+    color: var(--text-subtle);
+    font-weight: 700;
+  }
+  .nav-btn.active .nav-tag {
+    background: #DBEAFE;
+    color: var(--blue);
+  }
+  .sidebar-footer {
+    padding: 14px 16px;
+    border-top: 1px solid var(--border);
+    background: #F8FAFC;
+    font-size: 11.5px;
+    color: var(--text-muted);
+  }
+  .scenario-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .scen-btn {
+    padding: 6px 8px;
+    background: #FFFFFF;
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-main);
+    cursor: pointer;
+  }
+  .scen-btn.active-scen {
+    background: var(--blue);
+    color: #FFFFFF;
+    border-color: var(--blue);
+  }
+  /* Main Content Area */
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  header.topbar {
+    height: 60px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .topbar-left h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+  .topbar-left p {
+    font-size: 12px;
+    color: var(--text-subtle);
+  }
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .pill {
+    display: inline-block;
+    white-space: nowrap;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: #FFFFFF;
+  }
+  .pill-green { background: var(--green-light); color: var(--green); border-color: #BBF7D0; }
+  .pill-blue { background: var(--blue-light); color: var(--blue); border-color: var(--blue-border); }
+  .pill-red { background: var(--red-light); color: var(--red); border-color: #FECACA; }
+  .pill-amber { background: var(--amber-light); color: var(--amber); border-color: #FDE68A; }
+
+  .page-container {
+    flex: 1;
+    padding: 20px 24px;
+    overflow-y: auto;
+    display: none;
+  }
+  .page-container.active {
+    display: block;
+  }
+  .kpi-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .kpi-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-subtle);
+  }
+  .kpi-val {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-top: 6px;
+  }
+  .kpi-sub {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .grid-2-equal {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  th {
+    text-align: left;
+    padding: 8px 10px;
+    background: #F8FAFC;
+    border-bottom: 1px solid var(--border-strong);
+    color: var(--text-muted);
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+  }
+  td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-main);
+  }
+  .mono {
+    font-family: 'DejaVu Sans Mono', 'Liberation Mono', monospace;
+    font-size: 11.5px;
+  }
+  .btn-action {
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 4px;
+    border: 1px solid var(--blue);
+    background: var(--blue-light);
+    color: var(--blue);
+    cursor: pointer;
+  }
+  .form-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .input-box {
+    padding: 6px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+    font-size: 12.5px;
+    width: 180px;
+    text-align: right;
+    background: #FFFFFF;
+  }
+</style>
+</head>
+<body>
+  <aside>
+    <div>
+      <div class="brand-header">
+        <div class="brand-kicker">OpenFlow 1.3 Security NOC</div>
+        <div class="brand-title">SDN Network Guardian</div>
+        <div class="brand-sub">AI Traffic & Threat Mitigation</div>
+      </div>
+      <div class="nav-list">
+        <button class="nav-btn active" id="btn-overview" onclick="showPage('overview')">
+          <span>1. Overview</span><span class="nav-tag">NOC</span>
+        </button>
+        <button class="nav-btn" id="btn-topology" onclick="showPage('topology')">
+          <span>2. Live Network Topology</span><span class="nav-tag">OF 1.3</span>
+        </button>
+        <button class="nav-btn" id="btn-traffic" onclick="showPage('traffic')">
+          <span>3. Traffic Monitoring</span><span class="nav-tag">Flows</span>
+        </button>
+        <button class="nav-btn" id="btn-security" onclick="showPage('security')">
+          <span>4. Security Monitoring</span><span class="nav-tag">IDS/ML</span>
+        </button>
+        <button class="nav-btn" id="btn-mitigation" onclick="showPage('mitigation')">
+          <span>5. Threat Mitigation</span><span class="nav-tag">FlowMod</span>
+        </button>
+        <button class="nav-btn" id="btn-analytics" onclick="showPage('analytics')">
+          <span>6. Analytics</span><span class="nav-tag">Eval</span>
+        </button>
+        <button class="nav-btn" id="btn-settings" onclick="showPage('settings')">
+          <span>7. Settings</span><span class="nav-tag">Config</span>
+        </button>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div style="font-weight:700; color:#0F172A;">Active Scenario Simulation</div>
+      <div class="scenario-grid">
+        <button class="scen-btn" onclick="alert('Scenario A')">Scenario A</button>
+        <button class="scen-btn" onclick="alert('Scenario B')">Scenario B</button>
+        <button class="scen-btn active-scen" onclick="alert('Scenario C')">Scenario C</button>
+        <button class="scen-btn" onclick="alert('Scenario D')">Scenario D</button>
+      </div>
+      <div style="margin-top:10px; font-size:10.5px; color:#64748B;">
+        Team: R. Chaube, M. Shah, N. Mallik<br/>
+        Controller: Ryu OpenFlow 1.3 (TCP 6653)
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <header class="topbar">
+      <div class="topbar-left">
+        <h2 id="page-heading">Page 1: Network Operations & Security Overview</h2>
+        <p>Centralized OpenFlow 1.3 Flow Telemetry | Hybrid Detection (Rule + Random Forest) | Sub-2ms Edge Mitigation</p>
+      </div>
+      <div class="topbar-right">
+        <span class="pill pill-blue">Controller: c0 ONLINE (127.0.0.1:6653)</span>
+        <span class="pill pill-green">Legitimate PDR: 96.16%</span>
+        <span class="pill pill-red">Active Mitigations: 2 DROP Rules</span>
+      </div>
+    </header>
+
+    <!-- PAGE 1: OVERVIEW -->
+    <section class="page-container active" id="page-overview">
+      <div class="kpi-grid-4">
+        <div class="card">
+          <div class="kpi-label">Total Connected Hosts</div>
+          <div class="kpi-val">7 Hosts</div>
+          <div class="kpi-sub">1 Server, 4 Normal, 2 Sim Hosts</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Active OpenFlow Switches</div>
+          <div class="kpi-val">3 Switches</div>
+          <div class="kpi-sub">s1 (Core), s2 & s3 (Edge OVS 1.3)</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Network Traffic (Goodput)</div>
+          <div class="kpi-val" style="color:var(--blue);">17.62 Mbps</div>
+          <div class="kpi-sub">Protected Server Link (100M Cap)</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Live Packet Rate</div>
+          <div class="kpi-val">548 pps</div>
+          <div class="kpi-sub">Post-Mitigation Forwarding Rate</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Active Security Alerts</div>
+          <div class="kpi-val" style="color:var(--red);">2 Critical</div>
+          <div class="kpi-sub">SYN Flood (h5) & UDP Flood (h6)</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Detected Suspicious Flows</div>
+          <div class="kpi-val" style="color:var(--amber);">2 Flows</div>
+          <div class="kpi-sub">138 Peak Concurrent Sub-Flows</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Mitigation Actions</div>
+          <div class="kpi-val" style="color:var(--green);">2 Enforced</div>
+          <div class="kpi-sub">OFPFlowMod Priority 500 DROP</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Overall Network Health</div>
+          <div class="kpi-val" style="color:var(--green);">96.4%</div>
+          <div class="kpi-sub">Clients h1–h4 Uninterrupted</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">
+            <span>Real-Time Aggregate Network Throughput & Attack Mitigation Timeline (60s Window)</span>
+            <span class="pill pill-blue">Polling: 2.0s</span>
+          </div>
+          <svg viewBox="0 0 620 210" width="100%" height="210">
+            <rect x="40" y="15" width="560" height="165" fill="#F8FAFC" stroke="#E2E8F0"/>
+            <!-- Attack Window Shading -->
+            <rect x="190" y="15" width="260" height="165" fill="#FEE2E2" opacity="0.45"/>
+            <text x="320" y="30" font-size="10" font-weight="bold" fill="#991B1B" text-anchor="middle">Simulated DDoS Window (t=16s–45s) — Mitigated at Edge Switches s2 & s3</text>
+            <!-- Grid lines -->
+            <line x1="40" y1="55" x2="600" y2="55" stroke="#E2E8F0" stroke-dasharray="3,3"/>
+            <line x1="40" y1="95" x2="600" y2="95" stroke="#E2E8F0" stroke-dasharray="3,3"/>
+            <line x1="40" y1="135" x2="600" y2="135" stroke="#E2E8F0" stroke-dasharray="3,3"/>
+            <text x="34" y="58" font-size="9.5" fill="#64748B" text-anchor="end">18M</text>
+            <text x="34" y="98" font-size="9.5" fill="#64748B" text-anchor="end">12M</text>
+            <text x="34" y="138" font-size="9.5" fill="#64748B" text-anchor="end">6M</text>
+            <text x="34" y="178" font-size="9.5" fill="#64748B" text-anchor="end">0M</text>
+            <!-- Unmitigated Baseline Curve (Red Dashed) -->
+            <polyline fill="none" stroke="#DC2626" stroke-width="2" stroke-dasharray="5,4"
+              points="40,54 100,53 185,55 200,136 250,140 320,138 390,141 445,137 460,56 530,54 600,53"/>
+            <!-- Guardian Mitigated Curve (Green Solid) -->
+            <polyline fill="none" stroke="#15803D" stroke-width="2.6"
+              points="40,54 100,53 185,55 198,94 212,58 260,57 320,56 390,58 445,57 460,54 530,53 600,53"/>
+            <text x="55" y="198" font-size="10" font-weight="bold" fill="#15803D">■ Proposed SDN Guardian Goodput (17.62 Mbps)</text>
+            <text x="330" y="198" font-size="10" font-weight="bold" fill="#DC2626">-- Unmitigated Baseline Goodput (6.26 Mbps)</text>
+          </svg>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>Recent Automated OpenFlow Mitigation Events</span>
+            <span class="pill pill-green">Safelist Active</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Rule ID</th>
+                <th>Switch</th>
+                <th>Source IP</th>
+                <th>Attack Vector</th>
+                <th>Action</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">mit-c85bf1a0</td>
+                <td class="mono">s2 (Port 3)</td>
+                <td class="mono">10.0.0.5 (h5)</td>
+                <td>TCP_SYN_FLOOD</td>
+                <td><span class="pill pill-red">DROP (Prio 500)</span></td>
+                <td><span class="pill pill-green">VERIFIED</span></td>
+              </tr>
+              <tr>
+                <td class="mono">mit-00b2060f</td>
+                <td class="mono">s3 (Port 3)</td>
+                <td class="mono">10.0.0.6 (h6)</td>
+                <td>UDP_VOLUMETRIC</td>
+                <td><span class="pill pill-red">DROP (Prio 500)</span></td>
+                <td><span class="pill pill-green">VERIFIED</span></td>
+              </tr>
+              <tr>
+                <td class="mono">mit-71a49c12</td>
+                <td class="mono">s2 (Port 2)</td>
+                <td class="mono">10.0.0.2 (h2)</td>
+                <td>BURST_SPIKE</td>
+                <td><span class="pill pill-amber">METER 512kbps</span></td>
+                <td><span class="pill">EXPIRED (60s)</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="margin-top:12px; padding:10px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:6px; font-size:11.5px; color:#334155;">
+            <strong>Infrastructure Safeguard:</strong> Server <span class="mono">srv1 (10.0.0.100)</span> is hardware-safelisted. Normal clients <span class="mono">h1–h4</span> maintain 96.16% packet delivery ratio.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE 2: LIVE NETWORK TOPOLOGY -->
+    <section class="page-container" id="page-topology">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">
+            <span>Live OpenFlow 1.3 Topology Graph (1 Controller, 3 Switches, 7 Hosts)</span>
+            <span class="pill pill-blue">LLDP + PacketIn Discovery</span>
+          </div>
+          <svg viewBox="0 0 680 390" width="100%" height="390" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:6px;">
+            <!-- Control links -->
+            <line x1="210" y1="55" x2="150" y2="165" stroke="#2563EB" stroke-width="1.6" stroke-dasharray="5,4"/>
+            <line x1="210" y1="55" x2="340" y2="165" stroke="#2563EB" stroke-width="1.6" stroke-dasharray="5,4"/>
+            <line x1="210" y1="55" x2="530" y2="165" stroke="#2563EB" stroke-width="1.6" stroke-dasharray="5,4"/>
+            <!-- Server link -->
+            <line x1="485" y1="55" x2="340" y2="165" stroke="#15803D" stroke-width="3"/>
+            <!-- Switch trunks -->
+            <line x1="150" y1="185" x2="340" y2="185" stroke="#0F172A" stroke-width="3"/>
+            <line x1="340" y1="185" x2="530" y2="185" stroke="#0F172A" stroke-width="3"/>
+            <!-- Host links West -->
+            <line x1="150" y1="205" x2="65" y2="315" stroke="#2563EB" stroke-width="2.2"/>
+            <line x1="150" y1="205" x2="165" y2="315" stroke="#2563EB" stroke-width="2.2"/>
+            <line x1="150" y1="205" x2="265" y2="315" stroke="#DC2626" stroke-width="2.4" stroke-dasharray="4,3"/>
+            <!-- Host links East -->
+            <line x1="530" y1="205" x2="415" y2="315" stroke="#2563EB" stroke-width="2.2"/>
+            <line x1="530" y1="205" x2="515" y2="315" stroke="#2563EB" stroke-width="2.2"/>
+            <line x1="530" y1="205" x2="615" y2="315" stroke="#DC2626" stroke-width="2.4" stroke-dasharray="4,3"/>
+
+            <!-- Controller Node -->
+            <rect x="115" y="20" width="190" height="46" rx="6" fill="#EFF6FF" stroke="#1D4ED8" stroke-width="2"/>
+            <text x="210" y="40" font-size="11.5" font-weight="bold" fill="#0F172A" text-anchor="middle">Controller c0 (Ryu OF 1.3)</text>
+            <text x="210" y="55" font-size="9.5" fill="#1D4ED8" text-anchor="middle">127.0.0.1:6653 | ACTIVE</text>
+
+            <!-- Server Node -->
+            <rect x="395" y="20" width="185" height="46" rx="6" fill="#F0FDF4" stroke="#15803D" stroke-width="2"/>
+            <text x="487" y="40" font-size="11.5" font-weight="bold" fill="#14532D" text-anchor="middle">Server srv1 (Protected)</text>
+            <text x="487" y="55" font-size="9.5" fill="#15803D" text-anchor="middle">10.0.0.100/24 | 100M UP</text>
+
+            <!-- Switches -->
+            <rect x="85" y="160" width="130" height="48" rx="6" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+            <text x="150" y="181" font-size="11" font-weight="bold" fill="#0F172A" text-anchor="middle">Switch s2 (Edge W)</text>
+            <text x="150" y="197" font-size="9.5" fill="#475569" text-anchor="middle">DPID: 0x2 | OF 1.3</text>
+
+            <rect x="275" y="160" width="130" height="48" rx="6" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+            <text x="340" y="181" font-size="11" font-weight="bold" fill="#0F172A" text-anchor="middle">Switch s1 (Core)</text>
+            <text x="340" y="197" font-size="9.5" fill="#475569" text-anchor="middle">DPID: 0x1 | OF 1.3</text>
+
+            <rect x="465" y="160" width="130" height="48" rx="6" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+            <text x="530" y="181" font-size="11" font-weight="bold" fill="#0F172A" text-anchor="middle">Switch s3 (Edge E)</text>
+            <text x="530" y="197" font-size="9.5" fill="#475569" text-anchor="middle">DPID: 0x3 | OF 1.3</text>
+
+            <!-- Hosts -->
+            <rect x="20" y="310" width="90" height="52" rx="5" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.8"/>
+            <text x="65" y="330" font-size="10.5" font-weight="bold" text-anchor="middle">Client h1</text>
+            <text x="65" y="346" font-size="9" fill="#475569" text-anchor="middle">10.0.0.1 (UP)</text>
+
+            <rect x="120" y="310" width="90" height="52" rx="5" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.8"/>
+            <text x="165" y="330" font-size="10.5" font-weight="bold" text-anchor="middle">Client h2</text>
+            <text x="165" y="346" font-size="9" fill="#475569" text-anchor="middle">10.0.0.2 (UP)</text>
+
+            <rect x="220" y="310" width="90" height="52" rx="5" fill="#FEF2F2" stroke="#DC2626" stroke-width="2"/>
+            <text x="265" y="330" font-size="10.5" font-weight="bold" fill="#991B1B" text-anchor="middle">Sim Host h5</text>
+            <text x="265" y="346" font-size="9" fill="#DC2626" text-anchor="middle">10.0.0.5 (DROP)</text>
+
+            <rect x="370" y="310" width="90" height="52" rx="5" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.8"/>
+            <text x="415" y="330" font-size="10.5" font-weight="bold" text-anchor="middle">Client h3</text>
+            <text x="415" y="346" font-size="9" fill="#475569" text-anchor="middle">10.0.0.3 (UP)</text>
+
+            <rect x="470" y="310" width="90" height="52" rx="5" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.8"/>
+            <text x="515" y="330" font-size="10.5" font-weight="bold" text-anchor="middle">Client h4</text>
+            <text x="515" y="346" font-size="9" fill="#475569" text-anchor="middle">10.0.0.4 (UP)</text>
+
+            <rect x="570" y="310" width="90" height="52" rx="5" fill="#FEF2F2" stroke="#DC2626" stroke-width="2"/>
+            <text x="615" y="330" font-size="10.5" font-weight="bold" fill="#991B1B" text-anchor="middle">Sim Host h6</text>
+            <text x="615" y="346" font-size="9" fill="#DC2626" text-anchor="middle">10.0.0.6 (DROP)</text>
+          </svg>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>Switch & Link Status Inventory</span>
+            <span class="pill pill-green">All Links Monitored</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Link ID</th>
+                <th>Endpoints</th>
+                <th>Type</th>
+                <th>Capacity</th>
+                <th>Utilization</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td class="mono">s1-srv1</td><td>s1:p1 ↔ srv1</td><td>SERVER_TRUNK</td><td>100 Mbps</td><td>17.6%</td><td><span class="pill pill-green">UP</span></td></tr>
+              <tr><td class="mono">s1-s2</td><td>s1:p2 ↔ s2:p4</td><td>INTER_SWITCH</td><td>100 Mbps</td><td>18.5%</td><td><span class="pill pill-green">UP</span></td></tr>
+              <tr><td class="mono">s1-s3</td><td>s1:p3 ↔ s3:p4</td><td>INTER_SWITCH</td><td>100 Mbps</td><td>16.2%</td><td><span class="pill pill-green">UP</span></td></tr>
+              <tr><td class="mono">s2-h1</td><td>s2:p1 ↔ h1 (10.0.0.1)</td><td>CLIENT_ACCESS</td><td>50 Mbps</td><td>9.4%</td><td><span class="pill pill-green">FORWARDING</span></td></tr>
+              <tr><td class="mono">s2-h2</td><td>s2:p2 ↔ h2 (10.0.0.2)</td><td>CLIENT_ACCESS</td><td>50 Mbps</td><td>11.2%</td><td><span class="pill pill-green">FORWARDING</span></td></tr>
+              <tr><td class="mono">s2-h5</td><td>s2:p3 ↔ h5 (10.0.0.5)</td><td>ISOLATED_SIM</td><td>50 Mbps</td><td>0.0% (Filtered)</td><td><span class="pill pill-red">PORT BLOCKED</span></td></tr>
+              <tr><td class="mono">s3-h3</td><td>s3:p1 ↔ h3 (10.0.0.3)</td><td>CLIENT_ACCESS</td><td>50 Mbps</td><td>8.8%</td><td><span class="pill pill-green">FORWARDING</span></td></tr>
+              <tr><td class="mono">s3-h4</td><td>s3:p2 ↔ h4 (10.0.0.4)</td><td>CLIENT_ACCESS</td><td>50 Mbps</td><td>10.1%</td><td><span class="pill pill-green">FORWARDING</span></td></tr>
+              <tr><td class="mono">s3-h6</td><td>s3:p3 ↔ h6 (10.0.0.6)</td><td>ISOLATED_SIM</td><td>50 Mbps</td><td>0.0% (Filtered)</td><td><span class="pill pill-red">PORT BLOCKED</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE 3: TRAFFIC MONITORING -->
+    <section class="page-container" id="page-traffic">
+      <div class="kpi-grid-4">
+        <div class="card"><div class="kpi-label">Live Forwarded Packet Rate</div><div class="kpi-val">548.4 pps</div><div class="kpi-sub">Across s1, s2, s3 Flow Tables</div></div>
+        <div class="card"><div class="kpi-label">Bandwidth Utilization</div><div class="kpi-val" style="color:var(--blue);">17.62 Mbps</div><div class="kpi-sub">17.6% of 100 Mbps Core Trunk</div></div>
+        <div class="card"><div class="kpi-label">Dropped Attack Traffic</div><div class="kpi-val" style="color:var(--red);">6,240 pps</div><div class="kpi-sub">Filtered at Ingress s2:p3 & s3:p3</div></div>
+        <div class="card"><div class="kpi-label">Active OpenFlow Entries</div><div class="kpi-val">18 Rules</div><div class="kpi-sub">16 L2/L3 Forward + 2 Priority Drops</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">
+          <span>Live Per-Flow OpenFlow 1.3 Counter Table (OFPFlowStatsReply Snapshot)</span>
+          <span class="pill pill-blue">Updated every 2.0s</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Switch</th>
+              <th>Source IP:Port</th>
+              <th>Destination IP:Port</th>
+              <th>Proto</th>
+              <th>Packets</th>
+              <th>Bytes</th>
+              <th>Duration (s)</th>
+              <th>Rate (pps)</th>
+              <th>Throughput</th>
+              <th>Flow State</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">s2 (0x2)</td><td class="mono">10.0.0.1:50102</td><td class="mono">10.0.0.100:80</td><td>TCP (6)</td>
+              <td class="mono">1,560</td><td class="mono">1,216,800</td><td class="mono">12.0s</td><td class="mono">130.0 pps</td><td class="mono">811.2 kbps</td>
+              <td><span class="pill pill-green">NORMAL FORWARD</span></td>
+            </tr>
+            <tr>
+              <td class="mono">s2 (0x2)</td><td class="mono">10.0.0.2:50103</td><td class="mono">10.0.0.100:443</td><td>TCP (6)</td>
+              <td class="mono">1,980</td><td class="mono">1,821,600</td><td class="mono">12.0s</td><td class="mono">165.0 pps</td><td class="mono">1.21 Mbps</td>
+              <td><span class="pill pill-green">NORMAL FORWARD</span></td>
+            </tr>
+            <tr>
+              <td class="mono">s3 (0x3)</td><td class="mono">10.0.0.3:50104</td><td class="mono">10.0.0.100:80</td><td>TCP (6)</td>
+              <td class="mono">1,380</td><td class="mono">1,021,200</td><td class="mono">12.0s</td><td class="mono">115.0 pps</td><td class="mono">680.8 kbps</td>
+              <td><span class="pill pill-green">NORMAL FORWARD</span></td>
+            </tr>
+            <tr>
+              <td class="mono">s3 (0x3)</td><td class="mono">10.0.0.4:50105</td><td class="mono">10.0.0.100:8080</td><td>TCP (6)</td>
+              <td class="mono">1,680</td><td class="mono">1,142,400</td><td class="mono">12.0s</td><td class="mono">138.4 pps</td><td class="mono">761.6 kbps</td>
+              <td><span class="pill pill-green">NORMAL FORWARD</span></td>
+            </tr>
+            <tr style="background:#FEF2F2;">
+              <td class="mono">s2 (0x2)</td><td class="mono">10.0.0.5:44002</td><td class="mono">10.0.0.100:80</td><td>TCP SYN</td>
+              <td class="mono">17,100</td><td class="mono">1,265,400</td><td class="mono">6.0s</td><td class="mono">2,850.0 pps</td><td class="mono">1.69 Mbps</td>
+              <td><span class="pill pill-red">DROPPED AT s2</span></td>
+            </tr>
+            <tr style="background:#FEF2F2;">
+              <td class="mono">s3 (0x3)</td><td class="mono">10.0.0.6:44003</td><td class="mono">10.0.0.100:53</td><td>UDP (17)</td>
+              <td class="mono">20,400</td><td class="mono">19,992,000</td><td class="mono">6.0s</td><td class="mono">3,400.0 pps</td><td class="mono">26.65 Mbps</td>
+              <td><span class="pill pill-red">DROPPED AT s3</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PAGE 4: SECURITY MONITORING -->
+    <section class="page-container" id="page-security">
+      <div class="kpi-grid-4">
+        <div class="card"><div class="kpi-label">Normal Verified Flows</div><div class="kpi-val" style="color:var(--green);">4 Flows</div><div class="kpi-sub">h1, h2, h3, h4 -> srv1</div></div>
+        <div class="card"><div class="kpi-label">Suspicious Flows Flagged</div><div class="kpi-val" style="color:var(--red);">2 Flows</div><div class="kpi-sub">h5 (10.0.0.5) & h6 (10.0.0.6)</div></div>
+        <div class="card"><div class="kpi-label">Active Detection Engine</div><div class="kpi-val" style="color:var(--blue);">Hybrid AI</div><div class="kpi-sub">0.45*Rule + 0.55*Random Forest</div></div>
+        <div class="card"><div class="kpi-label">Mean Inference Latency</div><div class="kpi-val">0.177 ms</div><div class="kpi-sub">Per-Flow Evaluation Time</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">
+          <span>Real-Time Intrusion & Anomaly Detection Event Log</span>
+          <span class="pill pill-red">Live IDS Telemetry</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Timestamp (UTC)</th>
+              <th>Switch</th>
+              <th>Source IP</th>
+              <th>Destination IP</th>
+              <th>Classification</th>
+              <th>Detection Method</th>
+              <th>Confidence</th>
+              <th>Severity</th>
+              <th>Triggered Indicators</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background:#FEF2F2;">
+              <td class="mono">2026-11-03 04:32:18</td><td class="mono">s3</td><td class="mono">10.0.0.6</td><td class="mono">10.0.0.100:53</td>
+              <td><strong>UDP_VOLUMETRIC_FLOOD</strong></td><td>HYBRID (RF+RULE)</td><td class="mono">0.985</td>
+              <td><span class="pill pill-red">CRITICAL</span></td>
+              <td>3,400 pps >= 1,200; 3.33 MB/s >= 1.5 MB/s; RF Prob=0.99</td>
+            </tr>
+            <tr style="background:#FEF2F2;">
+              <td class="mono">2026-11-03 04:32:16</td><td class="mono">s2</td><td class="mono">10.0.0.5</td><td class="mono">10.0.0.100:80</td>
+              <td><strong>TCP_SYN_FLOOD</strong></td><td>HYBRID (RF+RULE)</td><td class="mono">0.992</td>
+              <td><span class="pill pill-red">CRITICAL</span></td>
+              <td>2,850 pps >= 1,200; SYN ratio=0.94; 76 concurrent flows</td>
+            </tr>
+            <tr>
+              <td class="mono">2026-11-03 04:31:50</td><td class="mono">s2</td><td class="mono">10.0.0.2</td><td class="mono">10.0.0.100:443</td>
+              <td>NORMAL_TRAFFIC</td><td>HYBRID (RF+RULE)</td><td class="mono">0.042</td>
+              <td><span class="pill pill-green">LOW / SAFE</span></td>
+              <td>165 pps, CV=0.21, SYN ratio=0.04 (Normal TLS Session)</td>
+            </tr>
+            <tr>
+              <td class="mono">2026-11-03 04:31:50</td><td class="mono">s2</td><td class="mono">10.0.0.1</td><td class="mono">10.0.0.100:80</td>
+              <td>NORMAL_TRAFFIC</td><td>HYBRID (RF+RULE)</td><td class="mono">0.031</td>
+              <td><span class="pill pill-green">LOW / SAFE</span></td>
+              <td>130 pps, CV=0.18, SYN ratio=0.03 (Normal HTTP Session)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PAGE 5: THREAT MITIGATION -->
+    <section class="page-container" id="page-mitigation">
+      <div class="kpi-grid-4">
+        <div class="card"><div class="kpi-label">Active Blocked Flows</div><div class="kpi-val" style="color:var(--red);">2 Rules</div><div class="kpi-sub">OFPFlowMod DROP (Priority 500)</div></div>
+        <div class="card"><div class="kpi-label">Rate-Limited Flows</div><div class="kpi-val" style="color:var(--amber);">1 Meter</div><div class="kpi-sub">OFPMeterMod 512 kbps Policy</div></div>
+        <div class="card"><div class="kpi-label">Rule Installation Latency</div><div class="kpi-val" style="color:var(--green);">1.353 ms</div><div class="kpi-sub">Controller-to-OVS FlowMod ACK</div></div>
+        <div class="card"><div class="kpi-label">Protected Safelist Hosts</div><div class="kpi-val" style="color:var(--blue);">srv1 + h1–h4</div><div class="kpi-sub">Zero Accidental Client Blocks</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">
+          <span>Installed OpenFlow 1.3 Mitigation Rules & Lifecycle Controls</span>
+          <span class="pill pill-green">Auto-Expiration: 60s Hard Timeout</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Rule ID</th>
+              <th>Switch</th>
+              <th>Matched Source → Dest</th>
+              <th>OpenFlow Action</th>
+              <th>Mitigation Reason</th>
+              <th>Switch Verification</th>
+              <th>TTL Remaining</th>
+              <th>Operator Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">mit-c85bf1a0</td><td class="mono">s2 (DPID 2)</td><td class="mono">10.0.0.5 → 10.0.0.100</td>
+              <td><span class="pill pill-red">DROP (Priority 500)</span></td>
+              <td>TCP SYN Flood (2,850 pps, SYN=0.94)</td>
+              <td><span class="pill pill-green">ACCEPTED (OFPFC_ADD)</span></td>
+              <td class="mono">48.2s / 60s</td>
+              <td><button class="btn-action">Manual Unblock</button></td>
+            </tr>
+            <tr>
+              <td class="mono">mit-00b2060f</td><td class="mono">s3 (DPID 3)</td><td class="mono">10.0.0.6 → 10.0.0.100</td>
+              <td><span class="pill pill-red">DROP (Priority 500)</span></td>
+              <td>UDP Volumetric Flood (26.6 Mbps)</td>
+              <td><span class="pill pill-green">ACCEPTED (OFPFC_ADD)</span></td>
+              <td class="mono">51.5s / 60s</td>
+              <td><button class="btn-action">Manual Unblock</button></td>
+            </tr>
+            <tr>
+              <td class="mono">mit-71a49c12</td><td class="mono">s2 (DPID 2)</td><td class="mono">10.0.0.2 → 10.0.0.100</td>
+              <td><span class="pill pill-amber">RATE_LIMIT (512 kbps)</span></td>
+              <td>Transient Micro-Burst (Client Safeguard)</td>
+              <td><span class="pill">AUTO-REMOVED (TTL=0s)</span></td>
+              <td class="mono">0.0s (Expired)</td>
+              <td><span style="color:#64748B; font-size:11px;">Restored</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PAGE 6: ANALYTICS -->
+    <section class="page-container" id="page-analytics">
+      <div class="kpi-grid-4">
+        <div class="card"><div class="kpi-label">Random Forest Precision</div><div class="kpi-val" style="color:var(--blue);">98.09%</div><div class="kpi-sub">FP = 6 / 683 Normal Test Flows</div></div>
+        <div class="card"><div class="kpi-label">Random Forest Recall</div><div class="kpi-val" style="color:var(--blue);">97.16%</div><div class="kpi-sub">TP = 308 / 317 Attack Test Flows</div></div>
+        <div class="card"><div class="kpi-label">Random Forest F1-Score</div><div class="kpi-val" style="color:var(--green);">97.62%</div><div class="kpi-sub">False-Positive Rate: 0.88%</div></div>
+        <div class="card"><div class="kpi-label">Detection + Mitigation</div><div class="kpi-val">3.22 ms</div><div class="kpi-sub">1.87 ms Detect + 1.35 ms FlowMod</div></div>
+      </div>
+      <div class="grid-2-equal">
+        <div class="card">
+          <div class="card-title"><span>Model Evaluation Comparison (Synthetic OpenFlow Test Set, N=1,000)</span></div>
+          <table>
+            <thead>
+              <tr><th>Detection Model</th><th>Precision</th><th>Recall</th><th>F1-Score</th><th>FPR</th><th>Latency</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Rule-Based Threshold</td><td class="mono">86.57%</td><td class="mono">91.48%</td><td class="mono">88.96%</td><td class="mono">6.59%</td><td class="mono">0.126 ms</td></tr>
+              <tr><td>Isolation Forest (65 iTrees)</td><td class="mono">88.69%</td><td class="mono">94.01%</td><td class="mono">91.27%</td><td class="mono">5.56%</td><td class="mono">0.205 ms</td></tr>
+              <tr style="background:#EFF6FF; font-weight:700;"><td>Random Forest (35 Trees)</td><td class="mono">98.09%</td><td class="mono">97.16%</td><td class="mono">97.62%</td><td class="mono">0.88%</td><td class="mono">0.051 ms</td></tr>
+              <tr><td>Hybrid Guardian (Rule + RF)</td><td class="mono">94.80%</td><td class="mono">97.79%</td><td class="mono">96.27%</td><td class="mono">2.49%</td><td class="mono">0.177 ms</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-title"><span>3-Way Network Performance Comparison Under Simulated Attack</span></div>
+          <table>
+            <thead>
+              <tr><th>Architecture Mode</th><th>Packet Delivery Ratio</th><th>Goodput</th><th>Avg RTT</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>1. Traditional Network (No SDN)</td><td class="mono" style="color:var(--red);">34.17%</td><td class="mono">6.26 Mbps</td><td class="mono">144.62 ms</td></tr>
+              <tr><td>2. SDN Monitoring Only (No Mitigation)</td><td class="mono" style="color:var(--amber);">38.17%</td><td class="mono">7.03 Mbps</td><td class="mono">133.21 ms</td></tr>
+              <tr style="background:#F0FDF4; font-weight:700;"><td>3. Proposed AI SDN Guardian</td><td class="mono" style="color:var(--green);">96.16%</td><td class="mono">17.62 Mbps</td><td class="mono">6.18 ms</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE 7: SETTINGS -->
+    <section class="page-container" id="page-settings">
+      <div class="grid-2-equal">
+        <div class="card">
+          <div class="card-title"><span>Rule-Based Traffic Threshold Configuration</span><span class="pill pill-blue">Live Hot-Reload</span></div>
+          <div class="form-row"><span>Max Packet Rate Threshold (PPS)</span><input class="input-box mono" value="1200.0 pps" readonly/></div>
+          <div class="form-row"><span>Max Byte Rate Threshold (BPS)</span><input class="input-box mono" value="1,500,000 B/s" readonly/></div>
+          <div class="form-row"><span>Max Concurrent Flows per Source IP</span><input class="input-box mono" value="35 flows" readonly/></div>
+          <div class="form-row"><span>Traffic Spike Variation Coefficient (CV)</span><input class="input-box mono" value="1.15" readonly/></div>
+          <div class="form-row"><span>TCP SYN Flag Flood Ratio Threshold</span><input class="input-box mono" value="0.65" readonly/></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span>AI Engine & OpenFlow Mitigation Policy</span><span class="pill pill-green">Active</span></div>
+          <div class="form-row"><span>Active Detection Mode</span><input class="input-box mono" value="HYBRID (Rule + ML)" readonly/></div>
+          <div class="form-row"><span>Selected Machine Learning Classifier</span><input class="input-box mono" value="Random Forest (35 Trees)" readonly/></div>
+          <div class="form-row"><span>Automated OpenFlow Threat Mitigation</span><input class="input-box mono" value="ENABLED (OFPFlowMod)" readonly/></div>
+          <div class="form-row"><span>Temporary Mitigation Hard Timeout</span><input class="input-box mono" value="60 seconds" readonly/></div>
+          <div class="form-row"><span>OpenFlow Telemetry Polling Interval</span><input class="input-box mono" value="2000 ms (2.0s)" readonly/></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const TITLES = {
+      overview: 'Page 1: Network Operations & Security Overview',
+      topology: 'Page 2: Live OpenFlow 1.3 Network Topology',
+      traffic: 'Page 3: Real-Time Flow & Bandwidth Monitoring',
+      security: 'Page 4: Intrusion & Anomaly Security Monitoring',
+      mitigation: 'Page 5: Automated OpenFlow Threat Mitigation',
+      analytics: 'Page 6: ML Classification & Performance Analytics',
+      settings: 'Page 7: Detection Thresholds & Controller Settings'
+    };
+    function showPage(id) {
+      document.querySelectorAll('.page-container').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('page-' + id).classList.add('active');
+      document.getElementById('btn-' + id).classList.add('active');
+      document.getElementById('page-heading').textContent = TITLES[id];
+    }
+  </script>
+</body>
+</html>
